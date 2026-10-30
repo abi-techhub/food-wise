@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FoodWise - Smart Food Expiry Predictor</title>
+<meta name="description" content="FoodWise: a Flask + scikit-learn web app that tracks food expiry, sends reminders, recommends recipes and predicts waste risk. Academic mini-project by Abirami.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%232e7d32'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --green-dark:#1b5e20; --green:#2e7d32; --green-light:#66bb6a;
+    --orange:#f39c12; --bg:#f4f6f4; --text:#263238; --muted:#5f6b5f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+  a{color:var(--green);text-decoration:none}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+  header{background:var(--green-dark);color:#fff;position:sticky;top:0;z-index:10}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .brand{font-weight:700;font-size:1.1rem;color:#fff}
+  .brand span{color:#a5d6a7}
+  nav a{color:rgba(255,255,255,.85);margin-left:20px;font-size:.92rem}
+  nav a:hover{color:#fff}
+  nav a.gh{background:rgba(255,255,255,.12);padding:7px 14px;border-radius:8px}
+
+  .hero{background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 55%,#43a047 100%);color:#fff;padding:72px 0 60px;text-align:center}
+  .hero h1{font-size:2.5rem;margin-bottom:14px}
+  .hero p{max-width:640px;margin:0 auto 26px;font-size:1.08rem;opacity:.92}
+  .badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:30px}
+  .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);padding:5px 14px;border-radius:999px;font-size:.8rem}
+  .btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{padding:12px 26px;border-radius:10px;font-weight:600}
+  .btn.light{background:#fff;color:var(--green-dark)}
+  .btn.ghost{border:1.5px solid rgba(255,255,255,.7);color:#fff}
+
+  section{padding:56px 0}
+  h2{text-align:center;font-size:1.7rem;margin-bottom:8px}
+  .sub{text-align:center;color:var(--muted);margin-bottom:36px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+  .card{background:#fff;border-radius:16px;padding:26px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+  .card .ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:14px;background:#e8f5e9}
+  .card.o .ico{background:#fef5e7}
+  .card h3{font-size:1.05rem;margin-bottom:8px}
+  .card p{font-size:.9rem;color:var(--muted)}
+
+  .ml-strip{background:#fff;border-radius:18px;padding:34px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+  .ml-strip ol{margin:16px 0 0 20px;font-size:.95rem}
+  .ml-strip li{margin-bottom:8px}
+  .gate{display:inline-block;background:#e8f5e9;color:var(--green-dark);font-weight:700;padding:4px 14px;border-radius:999px;font-size:.85rem}
+
+  .shots{columns:2;column-gap:20px}
+  .shot{break-inside:avoid;margin-bottom:20px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+  .shot img{width:100%;display:block}
+  .shot figcaption{padding:10px 14px;font-size:.85rem;color:var(--muted);border-top:1px solid #eef1ee}
+  @media(max-width:720px){.shots{columns:1}.hero h1{font-size:1.8rem}}
+
+  pre{background:#122612;color:#c8e6c9;padding:20px 22px;border-radius:12px;overflow-x:auto;font-size:.88rem;line-height:1.7}
+  .center{text-align:center}
+
+  footer{background:#fff;border-top:1px solid #e3e8e3;padding:26px 0;text-align:center;color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand"><span>Food</span>Wise</div>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#ml">How the ML works</a>
+      <a href="#screens">Screenshots</a>
+      <a href="#run">Run it</a>
+      <a class="gh" href="https://github.com/abi-techhub/food-wise">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <h1>Stop throwing food (and money) away.</h1>
+    <p>FoodWise tracks what you buy, warns you before it expires, suggests recipes
+       that use what you already have, and learns from your habits to predict
+       which items are most likely to go to waste.</p>
+    <div class="badges">
+      <span class="badge">Python / Flask</span>
+      <span class="badge">SQLite + SQLAlchemy</span>
+      <span class="badge">scikit-learn</span>
+      <span class="badge">Bootstrap 5</span>
+      <span class="badge">Chart.js</span>
+      <span class="badge">APScheduler</span>
+    </div>
+    <div class="btns">
+      <a class="btn light" href="https://github.com/abi-techhub/food-wise">View source on GitHub</a>
+      <a class="btn ghost" href="#run">Run it locally</a>
+    </div>
+  </div>
+</div>
+
+<section id="features">
+  <div class="wrap">
+    <h2>What it does</h2>
+    <p class="sub">Six modules, one goal: less food waste.</p>
+    <div class="grid">
+      <div class="card"><div class="ico">&#128230;</div><h3>Inventory tracking</h3>
+        <p>Add every purchase with quantity, category and expiry date. Full CRUD with validation, filters and sorting.</p></div>
+      <div class="card o"><div class="ico">&#128276;</div><h3>Expiry reminders</h3>
+        <p>A background scheduler checks every 12 hours and warns 3 days before expiry. Colour-coded: green, orange, red.</p></div>
+      <div class="card"><div class="ico">&#127859;</div><h3>Recipe rescue</h3>
+        <p>Recipes ranked by what is already in your kitchen - ones that use near-expiry ingredients float to the top.</p></div>
+      <div class="card o"><div class="ico">&#129302;</div><h3>ML waste predictions</h3>
+        <p>A personal Ridge-regression model predicts which current items are most at risk of being wasted - after 8 honest reports.</p></div>
+      <div class="card"><div class="ico">&#128202;</div><h3>Waste analytics</h3>
+        <p>Chart.js doughnuts and bars for waste by category, month and reason - computed from real database records only.</p></div>
+      <div class="card o"><div class="ico">&#128274;</div><h3>Per-user privacy</h3>
+        <p>Register, log in, and see only your own data. Passwords are salted hashes via Werkzeug + Flask-Login.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="ml" style="background:#eef4ee">
+  <div class="wrap">
+    <h2>How the ML works</h2>
+    <p class="sub">Honest by design: no predictions until there is real data.</p>
+    <div class="ml-strip">
+      <span class="gate">Training gate: 8 waste records</span>
+      <ol>
+        <li>Every reported waste event stores <strong>how long the item actually survived</strong> relative to its printed shelf life - the &ldquo;utilisation ratio&rdquo;.</li>
+        <li>Below <strong>8 records</strong> the ML panel shows &ldquo;Not trained yet&rdquo; with a progress bar - it never fabricates predictions.</li>
+        <li>At 8+ records a <strong>Ridge regression</strong> (scikit-learn) learns the ratio from category, quantity and shelf-life length.</li>
+        <li>Metrics use <strong>leave-one-out cross validation</strong> - an honest error estimate for a tiny dataset - and are shown with a small-sample disclaimer.</li>
+        <li>For each active item the model converts the ratio into a <strong>predicted waste date</strong>; anything at risk before its printed expiry is flagged with a priority badge.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <h2>Screenshots</h2>
+    <p class="sub">Captured from the running app with the seeded demo account (ML panel trained).</p>
+    <div class="shots">
+      <figure class="shot"><img loading="lazy" src="images/01_landing.png" alt="Landing page"><figcaption>01 - Landing page</figcaption></figure>
+      <figure class="shot"><img loading="lazy" src="images/03_dashboard.png" alt="Dashboard with demo data"><figcaption>02 - Dashboard: stat cards, ML insight, inventory doughnut</figcaption></figure>
+      <figure class="shot"><img loading="lazy" src="images/04_inventory.png" alt="Inventory with filters"><figcaption>03 - Inventory: filters, expiry countdown, status badges</figcaption></figure>
+      <figure class="shot"><img loading="lazy" src="images/05_log_waste_modal.png" alt="Report waste form"><figcaption>04 - Waste report: feeds the ML training data</figcaption></figure>
+      <figure class="shot"><img loading="lazy" src="images/08_analytics.png" alt="Analytics charts and ML panel"><figcaption>05 - Analytics: real-data charts + trained ML panel</figcaption></figure>
+      <figure class="shot"><img loading="lazy" src="images/07_recipes.png" alt="Recipe recommendations"><figcaption>06 - Recipes: matched ingredients highlighted, expiring-item boost</figcaption></figure>
+      <figure class="shot"><img loading="lazy" src="images/09_reminders.png" alt="Reminders page"><figcaption>07 - Reminders: deduplicated expiry alerts</figcaption></figure>
+      <figure class="shot"><img loading="lazy" src="images/06_add_food.png" alt="Add food form"><figcaption>08 - Add item with date validation</figcaption></figure>
+      <figure class="shot"><img loading="lazy" src="images/02_login.png" alt="Login page"><figcaption>09 - Login with demo hint</figcaption></figure>
+      <figure class="shot"><img loading="lazy" src="images/10_profile.png" alt="Profile page"><figcaption>10 - Profile: usage stats + password change</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="run" style="background:#eef4ee">
+  <div class="wrap">
+    <h2>Run it locally</h2>
+    <p class="sub">Three commands after cloning the repository.</p>
+    <pre>git clone https://github.com/abi-techhub/food-wise.git
+cd food-wise
+python -m venv venv &amp;&amp; source venv/bin/activate
+pip install -r requirements.txt
+python seed_demo.py        # demo data: demo_user / Demo@123
+python app.py              # open http://127.0.0.1:5000</pre>
+    <p class="center" style="margin-top:22px">
+      Want a live URL? The repo ships with a <strong>Procfile</strong> and
+      <strong>DEPLOY.md</strong> - deploy to Render, PythonAnywhere or Railway in minutes.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    FoodWise - Smart Food Expiry Predictor &middot; academic mini-project by Abirami &middot;
+    <a href="https://github.com/abi-techhub/food-wise">github.com/abi-techhub/food-wise</a><br>
+    Predictions are behavioural estimates, not food-safety advice.
+  </div>
+</footer>
+
+</body>
+</html>

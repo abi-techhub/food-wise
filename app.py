@@ -114,6 +114,16 @@ def create_app(config_overrides=None):
     with app.app_context():
         db.create_all()
         seed_default_recipes()
+        # Optional auto-seeding for hosted demos: set SEED_DEMO=1 in the
+        # hosting dashboard (e.g. Render) and the viva demo data (demo_user,
+        # 11 items, 10 waste records) is created on first boot automatically.
+        if os.environ.get("SEED_DEMO") == "1":
+            try:
+                from seed_demo import ensure_demo_data
+                if ensure_demo_data():
+                    print("[FoodWise] demo data seeded (SEED_DEMO=1)")
+            except Exception as exc:
+                print(f"[FoodWise] demo seeding skipped: {exc}")
 
     # --- Flask-Login ------------------------------------------------------
     @login_manager.user_loader

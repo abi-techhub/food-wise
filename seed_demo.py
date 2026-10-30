@@ -5,6 +5,10 @@ Usage
     python seed_demo.py          # create demo data if it does not exist
     python seed_demo.py --fresh  # wipe everything and rebuild
 
+On hosted deployments (Render, Railway, ...) you can instead set the
+environment variable SEED_DEMO=1 - the app then seeds this data itself on
+first boot, so the published site immediately has a working demo account.
+
 What you get
 ------------
 * Demo account:  username  demo_user  /  password  Demo@123
@@ -22,10 +26,6 @@ import sys
 os.environ["FOODWISE_SKIP_APP_CREATION"] = "1"
 
 from datetime import date, timedelta
-
-from app import create_app, seed_default_recipes
-from models import db, User, FoodItem, FoodWaste
-from routes.notifications import run_expiry_check
 
 DEMO_USERNAME = "demo_user"
 DEMO_EMAIL = "demo@foodwise.app"
@@ -62,72 +62,87 @@ WASTE_HISTORY = [
 ]
 
 
-def main(fresh=False):
-    app = create_app({"SCHEDULER_ENABLED": False})
+def ensure_demo_data(fresh=False):
+    """Create the demo user and data (idempotent).
+
+    Must be called inside an app context. Returns True when data was created,
+    False when the demo user already existed.
+    """
+    from models import db, User, FoodItem, FoodWaste
+    from routes.notifications import run_expiry_check
+
     today = date.today()
 
-    with app.app_context():
-        if fresh:
-            print("[FoodWise] --fresh: dropping all tables and rebuilding")
-            db.drop_all()
-            db.create_all()
-            seed_default_recipes()
+    if fresh:
+        print("[FoodWise] --fresh: dropping all tables and rebuilding")
+        db.drop_all()
+        db.create_all()
+        from app import seed_default_recipes
+        seed_default_recipes()
 
-        user = User.query.filter_by(username=DEMO_USERNAME).first()
-        if user is not None:
-            print("[FoodWise] demo data already exists (user 'demo_user').")
+    if User.query.filter_by(username=DEMO_USERNAME).first() is not None:
+        print("[FoodWise] demo data already exists (user 'demo_user').")
+        if not fresh:
             print("          Use  python seed_demo.py --fresh  to rebuild it.")
-            return
+        return False
 
-        user = User(username=DEMO_USERNAME, email=DEMO_EMAIL)
-        user.set_password(DEMO_PASSWORD)
-        db.session.add(user)
-        db.session.commit()
+    user = User(username=DEMO_USERNAME, email=DEMO_EMAIL)
+    user.set_password(DEMO_PASSWORD)
+    db.session.add(user)
+    db.session.commit()
 
-        # --- active inventory -------------------------------------------
-        for name, category, qty, unit, purchased_ago, expires_in in INVENTORY:
-            db.session.add(FoodItem(
-                user_id=user.id,
-                food_name=name,
-                category=category,
-                quantity=qty,
-                unit=unit,
-                purchase_date=today - timedelta(days=purchased_ago),
-                expiry_date=today + timedelta(days=expires_in),
-            ))
-        db.session.commit()
+    # --- active inventory --------------------------------------------------
+    for name, category, qty, unit, purchased_ago, expires_in in INVENTORY:
+        db.session.add(FoodItem(
+            user_id=user.id,
+            food_name=name,
+            category=category,
+            quantity=qty,
+            unit=unit,
+            purchase_date=today - timedelta(days=purchased_ago),
+            expiry_date=today + timedelta(days=expires_in),
+        ))
+    db.session.commit()
 
-        # --- historical waste (ML training data) -------------------------
-        for name, category, qty, reason, purchased_ago, shelf, frac in WASTE_HISTORY:
-            days_held = max(int(round(shelf * frac)), 0)
-            waste_day = today - timedelta(days=purchased_ago - days_held)
-            db.session.add(FoodWaste(
-                user_id=user.id,
-                food_name_snapshot=name,
-                category_snapshot=category,
-                wasted_quantity=qty,
-                reason=reason,
-                waste_date=waste_day,
-                shelf_life_days=shelf,
-                days_held=days_held,
-            ))
-        db.session.commit()
+    # --- historical waste (ML training data) --------------------------------
+    for name, category, qty, reason, purchased_ago, shelf, frac in WASTE_HISTORY:
+        days_held = max(int(round(shelf * frac)), 0)
+        waste_day = today - timedelta(days=purchased_ago - days_held)
+        db.session.add(FoodWaste(
+            user_id=user.id,
+            food_name_snapshot=name,
+            category_snapshot=category,
+            wasted_quantity=qty,
+            reason=reason,
+            waste_date=waste_day,
+            shelf_life_days=shelf,
+            days_held=days_held,
+        ))
+    db.session.commit()
 
-        # --- reminders via the real checker -------------------------------
-        created = run_expiry_check()
+    # --- reminders via the real checker --------------------------------------
+    created = run_expiry_check()
 
-        print()
-        print("=" * 56)
-        print(" FoodWise demo data seeded successfully")
-        print("=" * 56)
-        print(f" Login        : demo_user  /  Demo@123")
-        print(f" Inventory    : {len(INVENTORY)} items "
-              f"(expiring soon / expired / fresh all included)")
-        print(f" Waste records: {len(WASTE_HISTORY)} "
-              f"(ML gate is 8, so the ML panel is TRAINED)")
-        print(f" Reminders    : {created} created")
-        print(" Start the app:  python app.py   ->  http://127.0.0.1:5000")
-        print("=" * 56)
+    print()
+    print("=" * 56)
+    print(" FoodWise demo data seeded successfully")
+    print("=" * 56)
+    print(" Login        : demo_user  /  Demo@123")
+    print(f" Inventory    : {len(INVENTORY)} items "
+          f"(expiring soon / expired / fresh all included)")
+    print(f" Waste records: {len(WASTE_HISTORY)} "
+          f"(ML gate is 8, so the ML panel is TRAINED)")
+    print(f" Reminders    : {created} created")
+    print(" Start the app:  python app.py   ->  http://127.0.0.1:5000")
+    print("=" * 56)
+    return True
+
+
+def main(fresh=False):
+    from app import create_app
+    app = create_app({"SCHEDULER_ENABLED": False})
+    with app.app_context():
+        ensure_demo_data(fresh=fresh)
 
 
 if __name__ == "__main__":

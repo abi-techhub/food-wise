@@ -126,6 +126,16 @@ git remote add origin https://github.com/abi-techhub/food-wise.git
 git push -u origin main
 ```
 
+## Publishing (deployment)
+
+- **Live web app**: see `DEPLOY.md` - step-by-step for Render (recommended
+  free host), PythonAnywhere and Railway. The repo ships with a `Procfile`
+  and `gunicorn`. Setting the environment variable `SEED_DEMO=1` on the host
+  auto-seeds the viva demo data on first boot.
+- **Public showcase site**: the `site/` folder is GitHub-Pages-ready.
+  Repo → Settings → Pages → Deploy from branch → `main` → `/site` → Save,
+  and the showcase goes live at `https://abi-techhub.github.io/food-wise/`.
+
 ## Documentation
 
 - `docs/ARCHITECTURE.md` - system architecture and request flow

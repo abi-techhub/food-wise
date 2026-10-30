@@ -6,6 +6,7 @@ Werkzeug==3.0.3
 Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 APScheduler==3.10.4
+gunicorn==22.0.0
 
 # Data science / machine learning
 numpy==1.26.4
