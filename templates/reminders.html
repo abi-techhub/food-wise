@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Reminders{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h3 fw-bold mb-0">Reminders</h1>
+    <p class="text-muted small mb-0">Automatic expiry alerts, refreshed every 12 hours
+      (and whenever you add or open items).</p>
+  </div>
+  <div class="d-flex gap-2">
+    <form method="post" action="{{ url_for('notifications.run_check') }}">
+      <button class="btn btn-outline-success btn-sm" type="submit">
+        <i class="bi bi-arrow-clockwise"></i> Run check now</button>
+    </form>
+    <form method="post" action="{{ url_for('notifications.mark_all_read') }}">
+      <button class="btn btn-outline-secondary btn-sm" type="submit">
+        <i class="bi bi-check2-all"></i> Mark all read</button>
+    </form>
+  </div>
+</div>
+
+{% if notifications %}
+<div class="card">
+  <ul class="list-group list-group-flush">
+    {% for note in notifications %}
+    <li class="list-group-item d-flex justify-content-between align-items-center gap-3
+               {{ 'notification-unread' if not note.is_read }}">
+      <div class="d-flex align-items-start gap-3">
+        <i class="bi {{ 'bi-envelope-fill text-danger' if not note.is_read else 'bi-envelope-open text-muted' }} mt-1"></i>
+        <div>
+          <div class="{{ 'fw-semibold' if not note.is_read }}">{{ note.message }}</div>
+          <small class="text-muted">{{ note.notification_date.strftime('%d %b %Y, %H:%M') }}</small>
+        </div>
+      </div>
+      {% if not note.is_read %}
+      <form method="post" action="{{ url_for('notifications.mark_read', note_id=note.id) }}">
+        <button class="btn btn-sm btn-outline-secondary" type="submit">Mark read</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% else %}
+<div class="card">
+  <div class="card-body text-center p-5">
+    <i class="bi bi-bell-slash fs-1 text-muted d-block mb-3"></i>
+    <h5 class="fw-semibold">No reminders yet</h5>
+    <p class="text-muted small mb-3">
+      Reminders appear automatically when something is within
+      3 days of expiry or already expired.
+    </p>
+    <a class="btn btn-outline-success btn-sm" href="{{ url_for('food.add_food') }}">
+      <i class="bi bi-plus-circle"></i> Add an item</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

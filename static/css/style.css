@@ -1,0 +1,116 @@
+/* ============================================================
+   FoodWise - Smart Food Expiry Predictor
+   Theme: fresh green primary, white surfaces, soft orange accents
+   ============================================================ */
+:root {
+  --fw-green-dark: #1b5e20;
+  --fw-green: #2e7d32;
+  --fw-green-light: #66bb6a;
+  --fw-orange: #f39c12;
+  --fw-red: #c0392b;
+  --fw-teal: #00897b;
+  --fw-bg: #f4f6f4;
+  --fw-text: #263238;
+  --fw-muted: #5f6b5f;
+}
+
+body {
+  background-color: var(--fw-bg);
+  color: var(--fw-text);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* ---------- Navbar / footer ---------- */
+.app-navbar { background-color: var(--fw-green-dark); }
+.app-navbar .nav-link { color: rgba(255, 255, 255, 0.85); }
+.app-navbar .nav-link:hover,
+.app-navbar .nav-link:focus { color: #ffffff; }
+.brand-icon { color: #a5d6a7; }
+
+.app-footer {
+  background-color: #ffffff;
+  border-top: 1px solid #e3e8e3;
+}
+
+/* ---------- Buttons ---------- */
+.btn-app {
+  background-color: var(--fw-green);
+  border-color: var(--fw-green);
+  color: #ffffff;
+}
+.btn-app:hover, .btn-app:focus {
+  background-color: var(--fw-green-dark);
+  border-color: var(--fw-green-dark);
+  color: #ffffff;
+}
+
+/* ---------- Landing hero ---------- */
+.hero {
+  background: linear-gradient(135deg, var(--fw-green-dark) 0%, var(--fw-green) 55%, #43a047 100%);
+}
+.hero-icon { font-size: 9rem; opacity: 0.5; }
+
+.feature-card { border: none; border-radius: 1rem; }
+.feature-icon {
+  width: 48px; height: 48px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 0.75rem; font-size: 1.4rem; margin-bottom: 0.75rem;
+}
+.bg-green-subtle { background-color: #e8f5e9; color: var(--fw-green); }
+.bg-orange-subtle { background-color: #fef5e7; color: var(--fw-orange); }
+
+.step-number {
+  flex: 0 0 36px; width: 36px; height: 36px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background-color: var(--fw-green); color: #fff;
+  border-radius: 50%; font-weight: 700;
+}
+
+/* ---------- Stat cards ---------- */
+.stat-card { border: none; border-left: 5px solid transparent; border-radius: 0.75rem; }
+.stat-card .stat-value { font-size: 1.9rem; font-weight: 700; line-height: 1.1; }
+.stat-card .stat-label { font-size: 0.8rem; color: var(--fw-muted); }
+.stat-card .stat-icon { font-size: 2rem; opacity: 0.35; }
+.stat-green { border-left-color: var(--fw-green); }
+.stat-orange { border-left-color: var(--fw-orange); }
+.stat-red { border-left-color: var(--fw-red); }
+.stat-teal { border-left-color: var(--fw-teal); }
+
+/* ---------- Cards / forms ---------- */
+.auth-card { border: none; border-radius: 1rem; margin-top: 2rem; }
+.card { border: none; border-radius: 0.9rem; }
+.card-header { border-bottom: 1px solid #eef1ee; border-radius: 0.9rem 0.9rem 0 0 !important; }
+
+.demo-hint { background-color: #e8f5e9; color: #1b5e20; }
+.item-summary { background-color: #fff8ec; border: 1px solid #f6e3bd; }
+.ml-progress { background-color: #f5f7f5; }
+
+/* ---------- Charts ---------- */
+.chart-box { position: relative; height: 240px; }
+
+/* ---------- Notifications ---------- */
+.notification-unread { background-color: #fdf6e9; }
+
+/* ---------- Recipes ---------- */
+.recipe-card { border: none; border-radius: 1rem; }
+.chip {
+  display: inline-block; padding: 0.15rem 0.6rem; margin: 0 0.3rem 0.3rem 0;
+  border-radius: 999px; font-size: 0.78rem;
+}
+.chip-have { background-color: #e8f5e9; color: #1b5e20; }
+.chip-miss { background-color: #f1f3f1; color: #78909c; }
+
+/* ---------- Profile ---------- */
+.avatar-circle {
+  width: 72px; height: 72px;
+  display: flex; align-items: center; justify-content: center;
+  background-color: var(--fw-green); color: #fff;
+  font-size: 2rem; font-weight: 700; border-radius: 50%;
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 576px) {
+  .hero { padding: 2rem !important; }
+  .hero-icon { display: none; }
+  .stat-card .stat-value { font-size: 1.5rem; }
+}

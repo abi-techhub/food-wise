@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Recipes{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <h1 class="h3 fw-bold mb-0">What can I cook?</h1>
+  <p class="text-muted small mb-0">Ranked by how much of your inventory each recipe
+    uses - recipes that rescue expiring items float to the top.</p>
+</div>
+
+<form class="row g-2 mb-4" method="get" action="{{ url_for('recipes.recipes') }}">
+  <div class="col-md-6">
+    <input type="text" class="form-control" name="q" value="{{ q }}"
+           placeholder="Search recipes or ingredients, e.g. milk, dinner...">
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-app w-100" type="submit"><i class="bi bi-search"></i> Search</button>
+  </div>
+</form>
+
+{% if not current_user.foods.count() %}
+<div class="alert alert-info small">
+  <i class="bi bi-info-circle"></i>
+  Add items to your <a href="{{ url_for('food.inventory') }}">inventory</a> and the
+  matches will light up. For now, browse the full catalogue below.
+</div>
+{% endif %}
+
+{% if recommendations %}
+<div class="row g-4">
+  {% for r in recommendations %}
+  <div class="col-md-6 col-xl-4">
+    <div class="card h-100 recipe-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h5 class="card-title mb-0">{{ r.recipe.recipe_name }}</h5>
+          <span class="badge bg-light text-dark border">{{ r.recipe.category }}</span>
+        </div>
+
+        {% if r.uses_expiring %}
+        <span class="badge bg-warning text-dark mb-2">
+          <i class="bi bi-lightning-charge"></i> Uses an expiring item</span>
+        {% endif %}
+
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <div class="progress flex-grow-1" style="height: 8px;">
+            <div class="progress-bar {{ 'bg-success' if r.match_pct >= 60 else 'bg-warning' }}"
+                 style="width: {{ r.match_pct }}%"></div>
+          </div>
+          <span class="small text-muted">{{ r.match_pct }}%</span>
+        </div>
+
+        <h6 class="small text-uppercase text-muted mb-2">
+          Ingredients ({{ r.matched | length }}/{{ r.matched | length + r.missing | length }} ready)</h6>
+        <div class="mb-3">
+          {% for ing, item in r.matched %}
+          <span class="chip chip-have" title="In your inventory">
+            <i class="bi bi-check2"></i> {{ ing }}</span>
+          {% endfor %}
+          {% for ing in r.missing %}
+          <span class="chip chip-miss" title="Not in inventory"><i class="bi bi-x"></i> {{ ing }}</span>
+          {% endfor %}
+        </div>
+
+        <details>
+          <summary class="small text-success user-select-none">Show instructions</summary>
+          <p class="small text-muted mt-2 mb-0">{{ r.recipe.instructions }}</p>
+        </details>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="card-body text-center p-5">
+    <i class="bi bi-egg-fried fs-1 text-muted d-block mb-3"></i>
+    <h5 class="fw-semibold">No recipes match your search</h5>
+    <p class="text-muted small mb-0">Try a different keyword, or clear the search.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

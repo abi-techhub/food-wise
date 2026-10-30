@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <h1 class="h3 fw-bold mb-0">Waste analytics</h1>
+  <p class="text-muted small mb-0">All charts are generated from your real waste
+    records - nothing is simulated.</p>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card stat-teal h-100"><div class="card-body">
+      <div class="stat-value">{{ total_events }}</div>
+      <div class="stat-label">Waste events logged</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card stat-red h-100"><div class="card-body">
+      <div class="stat-value">{{ total_qty }}</div>
+      <div class="stat-label">Total quantity wasted</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card stat-orange h-100"><div class="card-body">
+      <div class="stat-value fs-4">{{ top_category }}</div>
+      <div class="stat-label">Most wasted category</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card stat-green h-100"><div class="card-body">
+      <div class="stat-value fs-4">{{ top_reason }}</div>
+      <div class="stat-label">Most common reason</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header bg-white fw-semibold"><i class="bi bi-cpu text-success"></i>
+    Machine learning panel</div>
+  <div class="card-body">
+    {% if ml_status.status == 'trained' %}
+    <div class="row g-3 align-items-center">
+      <div class="col-md-4">
+        <span class="badge bg-success mb-2">Trained</span>
+        <p class="small mb-0 text-muted">Ridge regression · trained on
+          {{ ml_status.records }} records (minimum {{ ml_status.required }})</p>
+      </div>
+      <div class="col-md-4">
+        <p class="small mb-1"><strong>{{ (ml_status.avg_ratio * 100) | round | int }}%</strong>
+          average shelf life used before waste</p>
+        <p class="small mb-0 text-muted">Leave-one-out error:
+          &plusmn;{{ (ml_status.mae * 100) | round | int }}% of shelf life
+          {% if ml_status.r2 < 0 %}· R&sup2; not meaningful on this sample size{% else %}· R&sup2; {{ ml_status.r2 }}{% endif %}</p>
+      </div>
+      <div class="col-md-4">
+        <p class="small text-muted mb-0">
+          <i class="bi bi-shield-exclamation"></i>
+          Small-sample model: estimates only, not food-safety advice.
+        </p>
+      </div>
+    </div>
+    {% else %}
+    <div class="row g-3 align-items-center">
+      <div class="col-md-8">
+        <span class="badge bg-secondary mb-2">Not trained yet</span>
+        <p class="small mb-2">The model trains automatically once
+          <strong>{{ ml_status.required }} waste records</strong> are logged -
+          you have <strong>{{ ml_status.records }}</strong>. Report items as waste
+          from the inventory page to collect training data.</p>
+        <div class="progress" style="max-width: 320px;">
+          <div class="progress-bar bg-warning text-dark"
+               style="width: {{ (100 * ml_status.records / ml_status.required) | round | int }}%"></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <p class="small text-muted mb-0">
+          <i class="bi bi-gear"></i> How it works: each waste report stores how long
+          the item survived relative to its printed shelf life. The model learns
+          that "utilisation ratio" per category, quantity and shelf-life length.
+        </p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if total_events %}
+<div class="row g-4 mb-4">
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-semibold small">Waste by category (quantity)</div>
+      <div class="card-body">
+        <div class="chart-box" id="catChartBox"><canvas id="catChart"></canvas></div>
+        <p class="text-muted small text-center mb-0 d-none" id="catChartEmpty">No data yet.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-semibold small">Waste by month (quantity)</div>
+      <div class="card-body">
+        <div class="chart-box"><canvas id="monthChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-semibold small">Waste by reason (events)</div>
+      <div class="card-body">
+        <div class="chart-box" id="reasonChartBox"><canvas id="reasonChart"></canvas></div>
+        <p class="text-muted small text-center mb-0 d-none" id="reasonChartEmpty">No data yet.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card mb-4">
+  <div class="card-body text-center p-5">
+    <i class="bi bi-bar-chart fs-1 text-muted d-block mb-3"></i>
+    <h5 class="fw-semibold">Charts will appear after your first waste report</h5>
+    <p class="text-muted small mb-0">
+      Go to <a href="{{ url_for('food.inventory') }}">Inventory</a>, open the waste
+      icon on any item, and log what you threw away.
+    </p>
+  </div>
+</div>
+{% endif %}
+
+{% if predictions %}
+<div class="card">
+  <div class="card-header bg-white fw-semibold">
+    <i class="bi bi-magic text-success"></i> ML predictions for current inventory
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Item</th><th>Category</th><th>Printed expiry</th>
+          <th>Predicted waste date</th><th>Shelf life typically used</th><th>Priority</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in predictions %}
+        <tr>
+          <td class="fw-semibold">{{ p.item.food_name }}</td>
+          <td>{{ p.item.category }}</td>
+          <td class="small">{{ p.item.expiry_date.strftime('%d %b %Y') }}</td>
+          <td class="small">~ {{ p.predicted_date.strftime('%d %b %Y') }}</td>
+          <td class="small">{{ (p.ratio * 100) | round | int }}%</td>
+          <td><span class="badge bg-{{ p.tone }}">{{ p.verdict }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-white small text-muted">
+    Predicted waste date = purchase date + (predicted utilisation ratio x shelf life).
+    Earlier than the printed date means the model expects you to lose part of the shelf life.
+  </div>
+</div>
+{% elif ml_status.status == 'trained' %}
+<div class="card">
+  <div class="card-body text-center p-4 text-muted small">
+    The model is trained, but none of your current items look at risk. Add more items
+    or wait for new purchases.
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if total_events %}
+<script>
+  const wasteByCategory = {{ waste_by_category | tojson }};
+  const wasteByMonth    = {{ waste_by_month | tojson }};
+  const wasteByReason   = {{ waste_by_reason | tojson }};
+
+  if (Object.keys(wasteByCategory).length === 0) {
+    document.getElementById('catChartBox').classList.add('d-none');
+    document.getElementById('catChartEmpty').classList.remove('d-none');
+  } else {
+    new Chart(document.getElementById('catChart'), {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(wasteByCategory),
+        datasets: [{ data: Object.values(wasteByCategory),
+                     backgroundColor: APP_PALETTE, borderWidth: 2 }]
+      },
+      options: { maintainAspectRatio: false,
+                 plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+
+  new Chart(document.getElementById('monthChart'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(wasteByMonth),
+      datasets: [{ label: 'Quantity wasted', data: Object.values(wasteByMonth),
+                   backgroundColor: '#f39c12', borderRadius: 6 }]
+    },
+    options: { maintainAspectRatio: false,
+               plugins: { legend: { display: false } },
+               scales: { y: { beginAtZero: true } } }
+  });
+
+  if (Object.keys(wasteByReason).length === 0) {
+    document.getElementById('reasonChartBox').classList.add('d-none');
+    document.getElementById('reasonChartEmpty').classList.remove('d-none');
+  } else {
+    new Chart(document.getElementById('reasonChart'), {
+      type: 'bar',
+      data: {
+        labels: Object.keys(wasteByReason),
+        datasets: [{ label: 'Events', data: Object.values(wasteByReason),
+                     backgroundColor: '#2e7d32', borderRadius: 6 }]
+      },
+      options: { indexAxis: 'y', maintainAspectRatio: false,
+                 plugins: { legend: { display: false } },
+                 scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+  }
+</script>
+{% endif %}
+{% endblock %}

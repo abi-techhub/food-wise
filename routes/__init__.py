@@ -1,0 +1,1 @@
+# FoodWise route blueprints package.

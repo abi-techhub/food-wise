@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<section class="hero rounded-4 p-5 mb-5 text-white">
+  <div class="row align-items-center g-4">
+    <div class="col-lg-7">
+      <h1 class="display-5 fw-bold mb-3">Stop throwing food (and money) away.</h1>
+      <p class="lead mb-4">
+        FoodWise tracks what you buy, warns you before it expires, suggests recipes
+        that use what you already have, and learns from your habits to predict what
+        is most likely to go to waste.
+      </p>
+      <a class="btn btn-light btn-lg me-2" href="{{ url_for('auth.register') }}">
+        <i class="bi bi-person-plus"></i> Create free account</a>
+      <a class="btn btn-outline-light btn-lg" href="{{ url_for('auth.login') }}">
+        <i class="bi bi-box-arrow-in-right"></i> Log in</a>
+    </div>
+    <div class="col-lg-5 text-center d-none d-lg-block">
+      <i class="bi bi-basket2-fill hero-icon"></i>
+    </div>
+  </div>
+</section>
+
+<div class="row g-4 mb-5">
+  <div class="col-md-3">
+    <div class="card h-100 feature-card">
+      <div class="card-body">
+        <div class="feature-icon bg-green-subtle"><i class="bi bi-box-seam"></i></div>
+        <h5 class="card-title">Track inventory</h5>
+        <p class="card-text small">Log every purchase with quantity, category and
+          expiry date in seconds.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100 feature-card">
+      <div class="card-body">
+        <div class="feature-icon bg-orange-subtle"><i class="bi bi-bell"></i></div>
+        <h5 class="card-title">Get reminded</h5>
+        <p class="card-text small">Automatic reminders 3 days before expiry, plus
+          alerts when something has already expired.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100 feature-card">
+      <div class="card-body">
+        <div class="feature-icon bg-green-subtle"><i class="bi bi-cpu"></i></div>
+        <h5 class="card-title">ML predictions</h5>
+        <p class="card-text small">After 8 waste reports the model learns your habits
+          and predicts which items are at risk.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100 feature-card">
+      <div class="card-body">
+        <div class="feature-icon bg-orange-subtle"><i class="bi bi-egg-fried"></i></div>
+        <h5 class="card-title">Cook, don't toss</h5>
+        <p class="card-text small">Recipe suggestions ranked by what is already in
+          your kitchen and what expires soonest.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="h4 mb-4">How it works</h2>
+<div class="row g-4 mb-2">
+  <div class="col-md-4">
+    <div class="d-flex gap-3">
+      <span class="step-number">1</span>
+      <div>
+        <h6 class="fw-bold mb-1">Add your purchases</h6>
+        <p class="small text-muted mb-0">Register, then log food items with their
+          purchase and expiry dates.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="d-flex gap-3">
+      <span class="step-number">2</span>
+      <div>
+        <h6 class="fw-bold mb-1">Act on reminders</h6>
+        <p class="small text-muted mb-0">The dashboard highlights expiring items in
+          orange and expired ones in red.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="d-flex gap-3">
+      <span class="step-number">3</span>
+      <div>
+        <h6 class="fw-bold mb-1">Report waste, get smarter</h6>
+        <p class="small text-muted mb-0">Every honest waste report trains the model
+          - after 8 reports your risk panel goes live.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

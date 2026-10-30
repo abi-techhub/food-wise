@@ -1,0 +1,16 @@
+# FoodWise - Smart Food Expiry Predictor
+# Install with:  pip install -r requirements.txt
+
+Flask==3.0.3
+Werkzeug==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+APScheduler==3.10.4
+
+# Data science / machine learning
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.5.1
+
+# Testing (used by tests/test_app.py)
+pytest==8.2.0

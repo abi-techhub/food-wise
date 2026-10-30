@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Inventory{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h3 fw-bold mb-0">Inventory</h1>
+    <p class="text-muted small mb-0">{{ items | length }} item(s) shown</p>
+  </div>
+  <a class="btn btn-app" href="{{ url_for('food.add_food') }}">
+    <i class="bi bi-plus-circle"></i> Add item</a>
+</div>
+
+<form class="card mb-4" method="get" action="{{ url_for('food.inventory') }}">
+  <div class="card-body row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label small mb-1" for="q">Search</label>
+      <input type="text" class="form-control form-control-sm" id="q" name="q"
+             value="{{ filters.q }}" placeholder="e.g. milk">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small mb-1" for="category">Category</label>
+      <select class="form-select form-select-sm" id="category" name="category">
+        <option value="">All categories</option>
+        {% for c in categories %}
+        <option value="{{ c }}" {{ 'selected' if filters.category == c }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small mb-1" for="status">Status</label>
+      <select class="form-select form-select-sm" id="status" name="status">
+        <option value="">Any</option>
+        <option value="safe" {{ 'selected' if filters.status == 'safe' }}>Fresh</option>
+        <option value="near" {{ 'selected' if filters.status == 'near' }}>Expiring soon</option>
+        <option value="expired" {{ 'selected' if filters.status == 'expired' }}>Expired</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small mb-1" for="sort">Sort by</label>
+      <select class="form-select form-select-sm" id="sort" name="sort">
+        <option value="expiry" {{ 'selected' if filters.sort == 'expiry' }}>Expiry date</option>
+        <option value="name" {{ 'selected' if filters.sort == 'name' }}>Name</option>
+        <option value="created" {{ 'selected' if filters.sort == 'created' }}>Newest first</option>
+      </select>
+    </div>
+    <div class="col-md-1 d-grid">
+      <button class="btn btn-sm btn-app" type="submit"><i class="bi bi-funnel"></i></button>
+    </div>
+  </div>
+</form>
+
+{% if items %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Food</th><th>Category</th><th>Quantity</th>
+          <th>Purchased</th><th>Expires</th><th>Status</th><th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td class="fw-semibold">{{ item.food_name }}</td>
+          <td><span class="badge bg-light text-dark border">{{ item.category }}</span></td>
+          <td>{{ item.quantity }} {{ item.unit }}</td>
+          <td class="small">{{ item.purchase_date.strftime('%d %b %Y') }}</td>
+          <td class="small">
+            {{ item.expiry_date.strftime('%d %b %Y') }}
+            <small class="d-block text-muted">{% set d = item.days_to_expiry %}
+              {% if d < 0 %}expired {{ -d }} day(s) ago{% elif d == 0 %}expires today{% else %}in {{ d }} day(s){% endif %}
+            </small>
+          </td>
+          <td>{% if item.status == 'expired' %}
+            <span class="badge bg-danger">Expired</span>
+            {% elif item.status == 'near' %}
+            <span class="badge bg-warning text-dark">Expiring soon</span>
+            {% else %}
+            <span class="badge bg-success">Fresh</span>
+            {% endif %}</td>
+          <td class="text-end">
+            <div class="btn-group btn-group-sm" role="group">
+              <a class="btn btn-outline-secondary" title="Edit"
+                 href="{{ url_for('food.edit_food', item_id=item.id) }}">
+                <i class="bi bi-pencil"></i></a>
+              <a class="btn btn-outline-warning" title="Report waste"
+                 href="{{ url_for('food.report_waste', item_id=item.id) }}">
+                <i class="bi bi-trash3"></i></a>
+              <form method="post" class="d-inline"
+                    action="{{ url_for('food.mark_consumed', item_id=item.id) }}">
+                <button class="btn btn-outline-success" title="Fully consumed (no waste logged)">
+                  <i class="bi bi-check2-circle"></i></button>
+              </form>
+              <form method="post" class="d-inline" data-confirm="Delete '{{ item.food_name }}' without logging waste?"
+                    action="{{ url_for('food.delete_food', item_id=item.id) }}">
+                <button class="btn btn-outline-danger" title="Delete">
+                  <i class="bi bi-x-lg"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<p class="small text-muted mt-2 mb-0">
+  <i class="bi bi-info-circle"></i>
+  Use <span class="badge bg-outline-warning border text-dark">waste</span> to log thrown-away food
+  (feeds the ML model) and <i class="bi bi-check2-circle"></i> when you finished eating it.
+</p>
+{% else %}
+<div class="card">
+  <div class="card-body text-center p-5">
+    <i class="bi bi-basket2 fs-1 text-muted d-block mb-3"></i>
+    <h5 class="fw-semibold">No items found</h5>
+    <p class="text-muted small">Try changing the filters, or add your first purchase.</p>
+    <a class="btn btn-app" href="{{ url_for('food.add_food') }}">
+      <i class="bi bi-plus-circle"></i> Add item</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

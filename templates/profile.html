@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4 text-center">
+        <div class="avatar-circle mx-auto mb-3">
+          {{ current_user.username[0] | upper }}
+        </div>
+        <h1 class="h4 fw-bold mb-1">{{ current_user.username }}</h1>
+        <p class="text-muted small mb-3">{{ current_user.email }}</p>
+        <p class="small text-muted mb-0">
+          <i class="bi bi-calendar3"></i>
+          Member since {{ current_user.created_at.strftime('%d %b %Y') }}
+        </p>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+      <div class="col-4">
+        <div class="card stat-card stat-green h-100"><div class="card-body text-center">
+          <div class="stat-value">{{ stats.items_tracked }}</div>
+          <div class="stat-label">Items in stock</div>
+        </div></div>
+      </div>
+      <div class="col-4">
+        <div class="card stat-card stat-orange h-100"><div class="card-body text-center">
+          <div class="stat-value">{{ stats.waste_records }}</div>
+          <div class="stat-label">Waste records</div>
+        </div></div>
+      </div>
+      <div class="col-4">
+        <div class="card stat-card stat-teal h-100"><div class="card-body text-center">
+          <div class="stat-value">{{ stats.reminders }}</div>
+          <div class="stat-label">Reminders</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="h5 fw-bold mb-1">Change password</h2>
+        <p class="text-muted small mb-4">Passwords are stored as salted hashes -
+          nobody (not even the admin) can read them.</p>
+
+        <form method="post" action="{{ url_for('auth.change_password') }}">
+          <div class="mb-3">
+            <label for="current_password" class="form-label">Current password</label>
+            <input type="password" class="form-control" id="current_password"
+                   name="current_password" required>
+          </div>
+          <div class="mb-3">
+            <label for="new_password" class="form-label">New password</label>
+            <input type="password" class="form-control" id="new_password"
+                   name="new_password" required minlength="6">
+          </div>
+          <div class="mb-4">
+            <label for="confirm_password" class="form-label">Confirm new password</label>
+            <input type="password" class="form-control" id="confirm_password"
+                   name="confirm_password" required minlength="6">
+          </div>
+          <button type="submit" class="btn btn-app">
+            <i class="bi bi-shield-lock"></i> Update password</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-body p-4">
+        <h2 class="h5 fw-bold mb-2">Your ML model</h2>
+        <p class="small text-muted mb-0">
+          The model is personal: it trains only on <em>your</em> waste records and
+          needs 8 of them before it starts predicting. Check the
+          <a href="{{ url_for('analytics.analytics') }}">Analytics</a> page to see
+          its current status.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

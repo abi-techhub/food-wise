@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h3 fw-bold mb-0">Dashboard</h1>
+    <p class="text-muted small mb-0">Hi {{ current_user.username }}, here is your kitchen at a glance.</p>
+  </div>
+  <a class="btn btn-app" href="{{ url_for('food.add_food') }}">
+    <i class="bi bi-plus-circle"></i> Add item</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card stat-green h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="stat-value">{{ total_items }}</div>
+            <div class="stat-label">Items in stock</div>
+          </div>
+          <i class="bi bi-box-seam stat-icon"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card stat-orange h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="stat-value">{{ near_count }}</div>
+            <div class="stat-label">Expiring in 3 days</div>
+          </div>
+          <i class="bi bi-hourglass-split stat-icon"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card stat-red h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="stat-value">{{ expired_count }}</div>
+            <div class="stat-label">Expired</div>
+          </div>
+          <i class="bi bi-exclamation-triangle stat-icon"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card stat-teal h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <div class="stat-value">{{ waste_total }}</div>
+            <div class="stat-label">Waste records</div>
+          </div>
+          <i class="bi bi-trash3 stat-icon"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-alarm text-danger"></i> Needs attention</span>
+        <a class="small" href="{{ url_for('food.inventory') }}">View all</a>
+      </div>
+      <div class="card-body p-0">
+        {% if focus_list %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Item</th><th>Quantity</th><th>Expires</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in focus_list %}
+              <tr>
+                <td class="fw-semibold">{{ item.food_name }}</td>
+                <td>{{ item.quantity }} {{ item.unit }}</td>
+                <td>
+                  {{ item.expiry_date.strftime('%d %b %Y') }}
+                  <small class="text-muted d-block">{% set d = item.days_to_expiry %}
+                    {% if d < 0 %}expired {{ -d }} day(s) ago{% elif d == 0 %}expires today{% else %}in {{ d }} day(s){% endif %}
+                  </small>
+                </td>
+                <td>{% if item.status == 'expired' %}
+                  <span class="badge bg-danger">Expired</span>
+                  {% elif item.status == 'near' %}
+                  <span class="badge bg-warning text-dark">Expiring soon</span>
+                  {% else %}
+                  <span class="badge bg-success">Fresh</span>
+                  {% endif %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted">
+          <i class="bi bi-emoji-smile fs-3 d-block mb-2"></i>
+          Nothing is expiring soon. Great job!
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card mb-4">
+      <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-cpu text-success"></i> ML insight
+      </div>
+      <div class="card-body">
+        {% if ml_status.status == 'trained' %}
+          <p class="mb-2">
+            <span class="badge bg-success">Trained</span>
+            <span class="small text-muted">on {{ ml_status.records }} waste records</span>
+          </p>
+          <p class="small mb-2">
+            Your household typically uses about
+            <strong>{{ (ml_status.avg_ratio * 100) | round | int }}%</strong> of the
+            printed shelf life, with a typical error of about
+            <strong>&plusmn;{{ (ml_status.mae * 100) | round | int }}%</strong>
+            <span class="text-muted">(leave-one-out estimate).</span>
+          </p>
+          {% if at_risk %}
+            <p class="small fw-semibold mb-1 mt-3">Items most at risk of waste:</p>
+            <ul class="list-unstyled small mb-0">
+              {% for row in at_risk %}
+              <li class="d-flex justify-content-between border-bottom py-1">
+                <span>{{ row.item.food_name }}</span>
+                <span class="text-danger">~{{ row.predicted_date.strftime('%d %b') }}</span>
+              </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="small text-muted mb-0">No item looks likely to be wasted right now.</p>
+          {% endif %}
+          <a class="small d-block mt-2" href="{{ url_for('analytics.analytics') }}">
+            Full analysis <i class="bi bi-arrow-right"></i></a>
+        {% else %}
+          <p class="mb-2">
+            <span class="badge bg-secondary">Not trained yet</span>
+          </p>
+          <p class="small mb-2">
+            The prediction model needs <strong>{{ ml_status.required }} waste records</strong>
+            to learn your habits. You have logged <strong>{{ ml_status.records }}</strong> so far.
+          </p>
+          <div class="progress mb-2" role="progressbar"
+               aria-valuenow="{{ ml_status.records }}" aria-valuemin="0"
+               aria-valuemax="{{ ml_status.required }}">
+            <div class="progress-bar bg-warning text-dark"
+                 style="width: {{ (100 * ml_status.records / ml_status.required) | round | int }}%">
+            </div>
+          </div>
+          <p class="small text-muted mb-0">
+            When you report an item as waste, FoodWise records how long it lasted -
+            that is the training data.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-pie-chart text-success"></i> Inventory by category
+      </div>
+      <div class="card-body">
+        <div class="chart-box" id="categoryChartBox"><canvas id="categoryChart"></canvas></div>
+        <p class="text-muted small text-center mb-0 d-none" id="categoryChartEmpty">
+          Add items to see the breakdown.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if category_counts %}
+<script>
+  renderCategoryDoughnut(
+    document.getElementById('categoryChart'),
+    {{ category_counts | tojson }}
+  );
+</script>
+{% else %}
+<script>
+  document.getElementById('categoryChartBox').classList.add('d-none');
+  document.getElementById('categoryChartEmpty').classList.remove('d-none');
+</script>
+{% endif %}
+{% endblock %}
